@@ -1,0 +1,23 @@
+.PHONY: build run docker-up fmt test swagger
+
+build:
+	go build -o bin/otp ./cmd/server
+
+run:
+	go run ./cmd/server
+
+docker-up:
+	docker compose up --build -d
+
+fmt:
+	gofmt -s -w .
+
+test:
+	go test ./...
+
+swagger:
+	swag init -g ./cmd/server/main.go -o ./docs --parseDependency --parseInternal
+
+swagger-serve:
+	swag init -g ./cmd/server/main.go -o ./docs --parseDependency --parseInternal
+	go run ./cmd/server

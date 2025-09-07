@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: otp_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d otp_service"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "redispass"]
+    environment:
+      - REDIS_PASSWORD=redispass
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispass", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DATABASE_DSN=host=db user=user password=password dbname=otp_service port=5432 sslmode=disable
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASS=redispass
+      - JWT_SECRET=change_this_to_a_strong_secret
+    ports:
+      - "8080:8080"
+    command: ["./otp-auth-service"]
+
+volumes:
+  db-data:
