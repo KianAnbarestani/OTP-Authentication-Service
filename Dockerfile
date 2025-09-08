@@ -10,3 +10,4 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /otp-auth-service /otp-auth-service
 EXPOSE 8080
 CMD ["/otp-auth-service"]
+
